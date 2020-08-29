@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.commons.collections4.MultiMap;
@@ -28,6 +29,10 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -218,11 +223,16 @@ public class LeadsService {
 	// leadRepository.save(leads);
 	// }
 
-	public List<Map<String, String>> fetchcountrecordingreportdatabetween(Map<String, Object> request,String reportingLocation) {
+	public List<Map<String, String>> fetchcountrecordingreportdatabetween(Map<String, Object> request,
+			String reportingLocation) {
 		List<String> users = (List<String>) request.get("userName");
 		List<String> campaing = (List<String>) request.get("campaingName");
+		List<String> status =  (List<String>) request.get("status");
 		String toDate = String.valueOf(request.get("dateto"));
 		String fromDate = String.valueOf(request.get("datefrom"));
+		Integer limit = (Integer) request.get("limit");
+		Integer offset = (Integer) request.get("offset");
+		String phoneNumber = String.valueOf(request.get("phoneNumber"));
 		System.out.println(request);
 		Timestamp dateToTimestamp = null;
 		Timestamp dateFromTimestamp = null;
@@ -238,58 +248,38 @@ public class LeadsService {
 		}
 		System.out.println(dateToTimestamp);
 		System.out.println(dateFromTimestamp);
-		List<String> campaings = usersRepository.fetchCampaingOfUser(users, campaing);
-		System.out.println(campaings);
-		List<Integer> leadsId = campaingLeadMappingRepository.findLeadsByCampaingName(campaings);
-		System.out.println(leadsId);
-		List<Map<String,String>> response = new ArrayList<>();
-		XSSFWorkbook workbook = new XSSFWorkbook();
-		XSSFSheet sheet = workbook.createSheet("RecordingReport");
-		int rownum = 0;
-		int cellnumHeader = 0;
-		Row rowHeader = sheet.createRow(rownum++);
-		Cell header1 = rowHeader.createCell(cellnumHeader++);
-		header1.setCellValue("User");
-		Cell header2 = rowHeader.createCell(cellnumHeader++);
-		header2.setCellValue("CallEndDate");
-		Cell header3 = rowHeader.createCell(cellnumHeader++);
-		header3.setCellValue("callDate");
-		Cell header4 = rowHeader.createCell(cellnumHeader++);
-		header4.setCellValue("Status");
-		Cell header6 = rowHeader.createCell(cellnumHeader++);
-		header6.setCellValue("Duration");
-		Cell header7 = rowHeader.createCell(cellnumHeader++);
-		header7.setCellValue("Phone_number");
-		Cell header8 = rowHeader.createCell(cellnumHeader++);
-		header8.setCellValue("Phone_book");
-		Cell header9 = rowHeader.createCell(cellnumHeader++);
-		header9.setCellValue("Recording_file");
-		Cell header10 = rowHeader.createCell(cellnumHeader++);
-		header10.setCellValue("Campaing");
-		for(Object[] items:recordingRepository.fetchRecordingsByLeadIds(leadsId)) {
-//		recordingRepository.fetchRecordingsByLeadIds(leadsId).forEach((items) -> {
-//				Full_Name	Campaugn	Phone_number	callDate	CallEndDate	 Duration	Phone_book	Status	HangupCause	Recording_file
-
-			Row row = sheet.createRow(rownum++);
-			int cellnum = 0;
-			Cell cell1 = row.createCell(cellnum++);
-			cell1.setCellValue(String.valueOf(items[0]));
-			Cell cell2 = row.createCell(cellnum++);
-			cell2.setCellValue(String.valueOf(items[1]));
-			Cell cell3 = row.createCell(cellnum++);
-			cell3.setCellValue(String.valueOf(items[2]));
-			Cell cell4 = row.createCell(cellnum++);
-			cell4.setCellValue(String.valueOf(items[3]));
-			Cell cell6 = row.createCell(cellnum++);
-			cell6.setCellValue(String.valueOf(items[4]));
-			Cell cell7 = row.createCell(cellnum++);
-			cell7.setCellValue(String.valueOf(items[5]));
-			Cell cell8 = row.createCell(cellnum++);
-			cell8.setCellValue(String.valueOf(items[6]));
-			Cell cell9 = row.createCell(cellnum++);
-			cell9.setCellValue(String.valueOf(items[7]));
-			Cell cell10 = row.createCell(cellnum++);
-			cell10.setCellValue(String.valueOf(items[8]));
+		// List<String> campaings = usersRepository.fetchCampaingOfUser(users,
+		// campaing);
+		// System.out.println(campaings);
+		// List<Integer> leadsId =
+		// campaingLeadMappingRepository.findLeadsByCampaingName(campaings);
+		// System.out.println(leadsId);
+		List<Map<String, String>> response = new ArrayList<>();
+//		XSSFWorkbook workbook = new XSSFWorkbook();
+//		XSSFSheet sheet = workbook.createSheet("RecordingReport");
+//		int rownum = 0;
+//		int cellnumHeader = 0;
+//		Row rowHeader = sheet.createRow(rownum++);
+//		Cell header1 = rowHeader.createCell(cellnumHeader++);
+//		header1.setCellValue("User");
+//		Cell header2 = rowHeader.createCell(cellnumHeader++);
+//		header2.setCellValue("CallEndDate");
+//		Cell header3 = rowHeader.createCell(cellnumHeader++);
+//		header3.setCellValue("callDate");
+//		Cell header4 = rowHeader.createCell(cellnumHeader++);
+//		header4.setCellValue("Status");
+//		Cell header6 = rowHeader.createCell(cellnumHeader++);
+//		header6.setCellValue("Duration");
+//		Cell header7 = rowHeader.createCell(cellnumHeader++);
+//		header7.setCellValue("Phone_number");
+//		Cell header8 = rowHeader.createCell(cellnumHeader++);
+//		header8.setCellValue("Phone_book");
+//		Cell header9 = rowHeader.createCell(cellnumHeader++);
+//		header9.setCellValue("Recording_file");
+//		Cell header10 = rowHeader.createCell(cellnumHeader++);
+//		header10.setCellValue("Campaing");
+		if(status.equals("ALL")) {
+		for (Object[] items : recordingRepository.fetchRecordingsByLeadIds(phoneNumber,users, dateFromTimestamp, dateToTimestamp,limit,offset)) {
 			Map<String, String> responseMap = new HashMap<>();
 			responseMap.put("USER", String.valueOf(items[0]));
 			responseMap.put("CallEndDate", String.valueOf(items[1]));
@@ -300,25 +290,40 @@ public class LeadsService {
 			responseMap.put("Phone_number", String.valueOf(items[6]));
 			responseMap.put("Phone_book", String.valueOf(items[7]));
 			response.add(responseMap);
-			
+
+		}
+		}else {
+			for (Object[] items : recordingRepository.fetchRecordingsByLeadIdsAndStatus(status,phoneNumber,users, dateFromTimestamp, dateToTimestamp,limit,offset)) {
+				Map<String, String> responseMap = new HashMap<>();
+				responseMap.put("USER", String.valueOf(items[0]));
+				responseMap.put("CallEndDate", String.valueOf(items[1]));
+				responseMap.put("callDate", String.valueOf(items[2]));
+				responseMap.put("Status", String.valueOf(items[3]));
+				responseMap.put("Duration", String.valueOf(items[4]));
+				responseMap.put("Recording_file", String.valueOf(items[5]));
+				responseMap.put("Phone_number", String.valueOf(items[6]));
+				responseMap.put("Phone_book", String.valueOf(items[7]));
+				response.add(responseMap);
+
+			}
 		}
 
-		
-		File excelFile = new File(reportingLocation + "RecordingReport.xlsx");
-		OutputStream fos;
-		try {
-			fos = new FileOutputStream(excelFile);
-			workbook.write(fos);
-			fos.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+//		File excelFile = new File(reportingLocation + "RecordingReport.xlsx");
+//		OutputStream fos;
+//		try {
+//			fos = new FileOutputStream(excelFile);
+//			workbook.write(fos);
+//			fos.close();
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+
 		return response;
 	}
 
-	public List<Attendance> fetchcountattendancereportdatabetween(Map<String, Object> request, String reportingLocation) {
+	public List<Attendance> fetchcountattendancereportdatabetween(Map<String, Object> request,
+			String reportingLocation) {
 		List<String> users = (List<String>) request.get("userName");
 		List<String> campaing = (List<String>) request.get("campaingName");
 		String toDate = String.valueOf(request.get("dateto"));
@@ -347,6 +352,7 @@ public class LeadsService {
 		} else {
 			userAttendance = attendanceRepository.findAttendanceByUserName(users, dateFromTimestamp, dateToTimestamp);
 		}
+		System.out.println(userAttendance);
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			XSSFWorkbook workbook = new XSSFWorkbook();
@@ -380,7 +386,7 @@ public class LeadsService {
 			OutputStream fos = new FileOutputStream(excelFile);
 			workbook.write(fos);
 			fos.close();
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return userAttendance;
@@ -414,49 +420,70 @@ public class LeadsService {
 		} else {
 			userAttendance = attendanceRepository.findAttendanceByUserName(users, dateFromTimestamp, dateToTimestamp);
 		}
-		
+
 		return response;
 	}
 
 	public MultiMap<String, Map<String, Object>> fetchcountreportdatabetween(Map<String, Object> request) {
 		List<String> users = (List<String>) request.get("userName");
 		List<String> campaing = (List<String>) request.get("campaingName");
-		List<String> campaings = usersRepository.fetchCampaingOfUser(users, campaing);
-		System.out.println(campaings);
-		List<Integer> leadsId = campaingLeadMappingRepository.findLeadsByCampaingName(campaings);
+		// List<String> campaings = usersRepository.fetchCampaingOfUser(users,
+		// campaing);
+		// System.out.println(campaings);
+		// List<Integer> leadsId =
+		// campaingLeadMappingRepository.findLeadsByCampaingName(campaings);
 		// List<Map<String, Map<String, Object>>> resultArray = new ArrayList<>();
-		System.out.println(leadsId);
+		// System.out.println(leadsId);
 		String dateTo = String.valueOf(request.get("dateto"));
 		String dateFrom = String.valueOf(request.get("datefrom"));
-//		call_date >=  TO_TIMESTAMP(:toDate,'YYYY-MM-DD HH24:MI:SS') and call_end_date <= TO_TIMESTAMP(:fromDate,'YYYY-MM-DD HH24:MI:SS')
-		System.out.println(
-				"select name,status,count(status) as count from leads where  call_date >= TO_TIMESTAMP('"
-						+ dateTo + "','YYYY-MM-DD HH24:MI:SS') and call_end_date <= TO_TIMESTAMP('" + dateFrom
-						+ "','YYYY-MM-DD HH24:MI:SS') and id IN (1,2) GROUP BY name,status");
+		String phoneNumber = String.valueOf(request.get("phoneNumber"));
+		// call_date >= TO_TIMESTAMP(:toDate,'YYYY-MM-DD HH24:MI:SS') and call_end_date
+		// <= TO_TIMESTAMP(:fromDate,'YYYY-MM-DD HH24:MI:SS')
+		System.out.println("select name,status,count(status) as count from leads where  call_date >= TO_TIMESTAMP('"
+				+ dateTo + "','YYYY-MM-DD HH24:MI:SS') and call_end_date <= TO_TIMESTAMP('" + dateFrom
+				+ "','YYYY-MM-DD HH24:MI:SS') and id IN (1,2) GROUP BY name,status");
 		// Map<String,List<Map<String,Object>>> resultUsers = new HashMap<>();
 		// MultivaluedHashMap<String, Map<String,Object>> resultUsers = new
 		// MultivaluedHashMap<>();
+		Timestamp dateToTimestamp = null;
+		Timestamp dateFromTimestamp = null;
+
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			Date dateToDate = dateFormat.parse(dateTo);
+			Date dateFromDate = dateFormat.parse(dateFrom);
+			// System.out.println(dateToDate);
+			dateToTimestamp = new java.sql.Timestamp(dateToDate.getTime());
+			dateFromTimestamp = new java.sql.Timestamp(dateFromDate.getTime());
+		} catch (Exception e) { // this generic but you can control another types of exception
+			// look the origin of excption
+		}
+		System.out.println(dateToTimestamp);
+		System.out.println(dateFromTimestamp);
 		MultiMap<String, Map<String, Object>> resultUsers = new MultiValueMap<>();
-		callLogsRepository.fetchcountreportdatabetween(leadsId, String.valueOf(request.get("dateto")),
-				String.valueOf(request.get("datefrom"))).forEach((items) -> {
-					System.out.println(items[0]);
-					System.out.println(items[1]);
-					System.out.println(items[2]);
-					System.out.println("#######");
-					Map<String, Object> rslt = new HashMap<>();
-					rslt.put(String.valueOf(items[1]).replaceAll("\\s", ""), items[2]);
-					// rsltArray.add(rslt);
-					resultUsers.put(String.valueOf(items[0]), rslt);
-					System.out.println(resultUsers);
-					// resultArray.add(resultUsers);
-				});
-		// Map<String,Map<String,Integer>> resultmap = new HashMap<>();
-		// for(Map.Entry<String,Object> items:resultUsers.entrySet()) {
-		// String[] keys=items.getKey().split("=");
-		// Map<String,Integer> rslt = new HashMap<>();
-		// rslt.put(keys[1], (Integer)items.getValue());
-		// resultmap.put(keys[0], rslt);
-		// }
+		if(phoneNumber.equals("")) {
+		callLogsRepository.fetchcountreportdatabetween(users, dateFromTimestamp, dateToTimestamp).forEach((items) -> {
+			System.out.println(items[0]);
+			System.out.println(items[1]);
+			System.out.println(items[2]);
+			System.out.println("#######");
+			Map<String, Object> rslt = new HashMap<>();
+			rslt.put(String.valueOf(items[1]).replaceAll("\\s", ""), items[2]);
+			resultUsers.put(String.valueOf(items[0]), rslt);
+			System.out.println(resultUsers);
+		});
+		}else {
+			callLogsRepository.fetchcountreportdatabetweenByPhoneNumber(phoneNumber, dateFromTimestamp, dateToTimestamp).forEach((items) -> {
+				System.out.println(items[0]);
+				System.out.println(items[1]);
+				System.out.println(items[2]);
+				System.out.println("#######");
+				Map<String, Object> rslt = new HashMap<>();
+				rslt.put(String.valueOf(items[1]).replaceAll("\\s", ""), items[2]);
+				resultUsers.put(String.valueOf(items[0]), rslt);
+				System.out.println(resultUsers);
+			});
+		}
 		return resultUsers;
 	}
 
@@ -490,7 +517,6 @@ public class LeadsService {
 					System.out.println(resultUsers);
 					// resultArray.add(resultUsers);
 				});
-		
 
 		// Map<String,Map<String,Integer>> resultmap = new HashMap<>();
 		// for(Map.Entry<String,Object> items:resultUsers.entrySet()) {
@@ -507,15 +533,18 @@ public class LeadsService {
 		List<CallLogs> listCallLogs = new ArrayList<>();
 
 		request.forEach(items -> {
+			if(Integer.parseInt(items.get("leadId"))!=0) {
 			Leads leads = leadRepository.findById(Integer.parseInt(items.get("leadId"))).get();
 			CallLogs callLogs = new CallLogs();
 			leads.setStatus(items.get("status"));
-			String callStartTime="";
-			String callEndTime="";
+			String callStartTime = "";
+			String callEndTime = "";
 			try {
-				callStartTime = LeadsService.formatDate(items.get("callStartedTime"), "dd-MM-yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss");
-				callEndTime = LeadsService.formatDate(items.get("callEndTime"), "dd-MM-yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss");
-				
+				callStartTime = LeadsService.formatDate(items.get("callStartedTime"), "dd-MM-yyyy HH:mm:ss",
+						"yyyy-MM-dd HH:mm:ss");
+				callEndTime = LeadsService.formatDate(items.get("callEndTime"), "dd-MM-yyyy HH:mm:ss",
+						"yyyy-MM-dd HH:mm:ss");
+
 			} catch (ParseException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -533,7 +562,11 @@ public class LeadsService {
 			}
 			System.out.println("###############batch feedback");
 			System.out.println(startTimeCall);
-			
+			long difference_In_Time = endTimeCall.getTime() - startTimeCall.getTime();
+			System.out.println(TimeUnit.MILLISECONDS.toSeconds(difference_In_Time));
+			long difference_In_Seconds = TimeUnit.MILLISECONDS.toSeconds(difference_In_Time);
+			System.out.println(difference_In_Time+"###############TIME DIFFERENCE");
+			System.out.println(difference_In_Seconds);
 			leads.setName(items.get("username"));
 			listUsers.add(leads);
 			callLogs.setAssignedTo(items.get("username"));
@@ -541,22 +574,82 @@ public class LeadsService {
 			callLogs.setCallEndDate(endTimeCall);
 			callLogs.setCallBackDateTime(items.get("callBackDateTime"));
 			callLogs.setComments(items.get("comment"));
-			callLogs.setCallDuration(items.get("callTime"));	
+			callLogs.setCallDuration(String.valueOf(difference_In_Seconds));
 			callLogs.setLeadId(leads.getId());
+			callLogs.setCallType(items.get("callType"));
 			callLogs.setStatus(leads.getStatus());
 			listCallLogs.add(callLogs);
+			}else {
+				List<String> listCampName=campaingRepository.findCampaingByUserName(items.get("username"));
+				String campName=listCampName!=null?listCampName.get(0):"";
+				Leads lead= new Leads();
+				lead.setAssignedTo(items.get("username"));
+				lead.setCallBackDateTime(items.get("callBackDateTime"));
+				lead.setFilename("manual"+campName);
+				lead.setPhoneNumber(items.get("phone_number"));
+				lead.setStatus(items.get("status"));
+				LeadVersions leadVersion=leadVersionsRepository.findByFileName("manual"+campName);
+				if(leadVersion==null) {
+					leadVersion=new LeadVersions();
+					leadVersion.setCampaingName(campName);
+					leadVersion.setFilename("manual"+campName);
+					leadVersion.setStatus("Active");
+					leadVersionsRepository.save(leadVersion);
+				}
+				leadRepository.save(lead);
+				CallLogs callLogs = new CallLogs();
+				callLogs.setStatus(items.get("status"));
+				String callStartTime = "";
+				String callEndTime = "";
+				try {
+					callStartTime = LeadsService.formatDate(items.get("callStartedTime"), "dd-MM-yyyy HH:mm:ss",
+							"yyyy-MM-dd HH:mm:ss");
+					callEndTime = LeadsService.formatDate(items.get("callEndTime"), "dd-MM-yyyy HH:mm:ss",
+							"yyyy-MM-dd HH:mm:ss");
+
+				} catch (ParseException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				System.out.println(callStartTime);
+				Date startTimeCall = null;
+				Date endTimeCall = null;
+				try {
+					startTimeCall = dateFormat.parse(callStartTime);
+					endTimeCall = dateFormat.parse(callEndTime);
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println("###############batch feedback");
+				System.out.println(startTimeCall);
+				long difference_In_Time = endTimeCall.getTime() - startTimeCall.getTime();
+				long difference_In_Seconds = TimeUnit.MILLISECONDS.toSeconds(difference_In_Time);
+				callLogs.setAssignedTo(items.get("username"));
+				callLogs.setCallDate(startTimeCall);
+				callLogs.setCallEndDate(endTimeCall);
+				callLogs.setCallBackDateTime(items.get("callBackDateTime"));
+				callLogs.setComments(items.get("comment"));
+				callLogs.setCallDuration(String.valueOf(difference_In_Seconds));
+				callLogs.setLeadId(lead.getId());
+				callLogs.setCallType(items.get("callType"));
+				callLogs.setStatus(lead.getStatus());
+				listCallLogs.add(callLogs);
+			}
 		});
 		leadRepository.saveAll(listUsers);
 		callLogsRepository.saveAll(listCallLogs);
-		
+
 	}
-	public static String formatDate (String date, String initDateFormat, String endDateFormat) throws ParseException {
 
-	    Date initDate = new SimpleDateFormat(initDateFormat).parse(date);
-	    SimpleDateFormat formatter = new SimpleDateFormat(endDateFormat);
-	    String parsedDate = formatter.format(initDate);
+	public static String formatDate(String date, String initDateFormat, String endDateFormat) throws ParseException {
 
-	    return parsedDate;
+		Date initDate = new SimpleDateFormat(initDateFormat).parse(date);
+		SimpleDateFormat formatter = new SimpleDateFormat(endDateFormat);
+		String parsedDate = formatter.format(initDate);
+
+		return parsedDate;
 	}
 
 	public Map<String, List<CallLogs>> fetchreportdatabetweenWithUserName(Map<String, Object> request) {
@@ -567,7 +660,25 @@ public class LeadsService {
 		// campaing);
 		// List<Integer> leadsId =
 		// campaingLeadMappingRepository.findLeadsByCampaingName(campaings);
-		List<CallLogs> resultLeads = callLogsRepository.fetchreportdatabetweenWithUserName(userName);
+		String dateTo = (String) request.get("dateto");
+		String dateFrom = (String) request.get("datefrom");
+		Timestamp dateToTimestamp = null;
+		Timestamp dateFromTimestamp = null;
+
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			Date dateToDate = dateFormat.parse(dateTo);
+			Date dateFromDate = dateFormat.parse(dateFrom);
+			// System.out.println(dateToDate);
+			dateToTimestamp = new java.sql.Timestamp(dateToDate.getTime());
+			dateFromTimestamp = new java.sql.Timestamp(dateFromDate.getTime());
+		} catch (Exception e) { // this generic but you can control another types of exception
+			// look the origin of excption
+		}
+		System.out.println(dateToTimestamp);
+		System.out.println(dateFromTimestamp);
+		List<CallLogs> resultLeads = callLogsRepository.fetchreportdatabetweenWithUserName(userName, dateFromTimestamp,
+				dateToTimestamp);
 		response.put("leads", resultLeads);
 		// try {
 		// ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -644,10 +755,35 @@ public class LeadsService {
 	public ByteArrayResource fetchreportdatabetween(Map<String, Object> request, String reportingLocation) {
 		List<String> users = (List<String>) request.get("userName");
 		List<String> campaing = (List<String>) request.get("campaingName");
-		List<String> campaings = usersRepository.fetchCampaingOfUser(users, campaing);
-		List<Integer> leadsId = campaingLeadMappingRepository.findLeadsByCampaingName(campaings);
-		List<Object[]> resultLeads = callLogsRepository.fetchreportdatabetween(leadsId, String.valueOf(request.get("dateto")),
-				String.valueOf(request.get("datefrom")));
+		String phoneNumber = (String) request.get("phoneNumber");
+		// List<String> campaings = usersRepository.fetchCampaingOfUser(users,
+		// campaing);
+		// List<Integer> leadsId =
+		// campaingLeadMappingRepository.findLeadsByCampaingName(campaing);
+		String dateTo = String.valueOf(request.get("dateto"));
+		String dateFrom = String.valueOf(request.get("datefrom"));
+		Timestamp dateToTimestamp = null;
+		Timestamp dateFromTimestamp = null;
+
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			Date dateToDate = dateFormat.parse(dateTo);
+			Date dateFromDate = dateFormat.parse(dateFrom);
+			// System.out.println(dateToDate);
+			dateToTimestamp = new java.sql.Timestamp(dateToDate.getTime());
+			dateFromTimestamp = new java.sql.Timestamp(dateFromDate.getTime());
+		} catch (Exception e) { // this generic but you can control another types of exception
+			// look the origin of exception
+		}
+		System.out.println(dateToTimestamp);
+		System.out.println(dateFromTimestamp);
+		List<Object[]> resultLeads = new ArrayList<>();
+		if (phoneNumber.equals("")) {
+			resultLeads.addAll(callLogsRepository.fetchreportdatabetween(users, dateFromTimestamp, dateToTimestamp));
+		} else {
+			resultLeads.addAll(callLogsRepository.fetchreportdatabetweenByPhoneNumber(phoneNumber, dateFromTimestamp,
+					dateToTimestamp));
+		}
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			XSSFWorkbook workbook = new XSSFWorkbook();
@@ -668,7 +804,16 @@ public class LeadsService {
 			Cell header7 = rowHeader.createCell(cellnumHeader++);
 			header7.setCellValue("Call Duration");
 			Cell header8 = rowHeader.createCell(cellnumHeader++);
-			header8.setCellValue("Call Date");
+			header8.setCellValue("Call Start Date");
+			Cell header9 = rowHeader.createCell(cellnumHeader++);
+			header9.setCellValue("Call End Date");
+			Cell header10 = rowHeader.createCell(cellnumHeader++);
+			header10.setCellValue("Recording");
+			Font hlink_font = workbook.createFont();
+		    hlink_font.setUnderline(Font.U_SINGLE);
+		    hlink_font.setColor(IndexedColors.BLUE.getIndex());
+		    CellStyle hlink_style = workbook.createCellStyle();
+		    CreationHelper createHelper = workbook.getCreationHelper();
 			for (Object[] lead : resultLeads) {
 				// this creates a new row in the sheet
 				Row row = sheet.createRow(rownum++);
@@ -676,17 +821,31 @@ public class LeadsService {
 				Cell cell1 = row.createCell(cellnum++);
 				cell1.setCellValue((String) lead[0]);
 				Cell cell2 = row.createCell(cellnum++);
-				cell2.setCellValue((String) lead[0]);
+				cell2.setCellValue((String) lead[1]);
 				Cell cell3 = row.createCell(cellnum++);
-				cell3.setCellValue((String) lead[0]);
+				cell3.setCellValue((String) lead[2]);
 				Cell cell4 = row.createCell(cellnum++);
-				cell4.setCellValue((String) lead[0]);
+				cell4.setCellValue((String) lead[3]);
+				Cell cell5 = row.createCell(cellnum++);
+				cell5.setCellValue((String) lead[4]);
 				Cell cell6 = row.createCell(cellnum++);
-				cell6.setCellValue((String) lead[0]);
+				cell6.setCellValue((String) lead[5]);
 				Cell cell7 = row.createCell(cellnum++);
-				cell7.setCellValue((String) lead[0]);
+				cell7.setCellValue(String.valueOf(lead[6]));
 				Cell cell8 = row.createCell(cellnum++);
-				cell8.setCellValue((String.valueOf(lead[0])));
+				cell8.setCellValue((String.valueOf(lead[7])));
+				Cell cell9 = row.createCell(cellnum++);
+				hlink_style.setFont(hlink_font);
+				org.apache.poi.ss.usermodel.Hyperlink hp = createHelper.createHyperlink(org.apache.poi.ss.usermodel.Hyperlink.LINK_FILE);
+				String filename=String.valueOf(lead[8]);
+				if (filename.indexOf(".") > 0)
+					filename = filename.substring(0, filename.lastIndexOf("."))+".mp3";
+				String url="http://157.245.109.0:8080/microsmartui/dist/assets/recording/mp3/"+filename;
+				url=url.replace("\\", "/");
+			    hp.setAddress(url);
+			    hp.setLabel(url);
+			    cell9.setCellValue(String.valueOf(lead[8]));
+				cell9.setHyperlink(hp);
 			}
 			File excelFile = new File(reportingLocation + "MISReport.xlsx");
 			OutputStream fos = new FileOutputStream(excelFile);
@@ -718,55 +877,120 @@ public class LeadsService {
 	public void feedback(int id, String status, String calltime) {
 		Leads leads = leadRepository.findById(id).get();
 		leads.setStatus(status);
-//		leads.setLastLocalCallTime(calltime);
+		// leads.setLastLocalCallTime(calltime);
 		leadRepository.save(leads);
-		
+
 	}
 
-	public void feedbackLead(int id, String status, String calltime, String comments, String callBackDateTime,
-			String callStartedTime, String callEndTime,String username) {
-		Leads leads = leadRepository.findById(id).get();
-		String callEnd="";
-		String callStart="";
-		leads.setStatus(status);
+	public void feedbackLead(Map<String,String> items) {
+
+		if(Integer.parseInt(items.get("leadId"))!=0) {
+		Leads leads = leadRepository.findById(Integer.parseInt(items.get("leadId"))).get();
+		CallLogs callLogs = new CallLogs();
+		leads.setStatus(items.get("status"));
+		String callStartTime = "";
+		String callEndTime = "";
 		try {
-			callStart = LeadsService.formatDate(callStartedTime, "dd-MM-yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss");
-		
-			 callEnd = LeadsService.formatDate(callEndTime, "dd-MM-yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss");
+			callStartTime = LeadsService.formatDate(items.get("callStartedTime"), "dd-MM-yyyy HH:mm:ss",
+					"yyyy-MM-dd HH:mm:ss");
+			callEndTime = LeadsService.formatDate(items.get("callEndTime"), "dd-MM-yyyy HH:mm:ss",
+					"yyyy-MM-dd HH:mm:ss");
+
 		} catch (ParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		System.out.println(callStartTime);
 		Date startTimeCall = null;
 		Date endTimeCall = null;
-		System.out.println("############### feedback");
-		
 		try {
-			if(callStartedTime!=null) {
-			startTimeCall = dateFormat.parse(callStart);
-			System.out.println(startTimeCall);
-			}
-			if(callEndTime!=null) {
-			endTimeCall = dateFormat.parse(callEnd);
-			}
+			startTimeCall = dateFormat.parse(callStartTime);
+			endTimeCall = dateFormat.parse(callEndTime);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if(username!=null) {
-			leads.setName(username);
-		}
-		leadRepository.save(leads);
-		CallLogs callLogs = new CallLogs();
-		callLogs.setLeadId(leads.getId());
-		callLogs.setAssignedTo(leads.getName());
+		System.out.println("###############batch feedback");
+		System.out.println(startTimeCall);
+		long difference_In_Time = endTimeCall.getTime() - startTimeCall.getTime();
+		System.out.println(TimeUnit.MILLISECONDS.toSeconds(difference_In_Time));
+		long difference_In_Seconds = TimeUnit.MILLISECONDS.toSeconds(difference_In_Time);
+		System.out.println(difference_In_Time+"###############TIME DIFFERENCE");
+		System.out.println(difference_In_Seconds);
+		leads.setName(items.get("username"));
+		leadsRepository.save(leads);
+//		listUsers.add(leads);
+		callLogs.setAssignedTo(items.get("username"));
 		callLogs.setCallDate(startTimeCall);
-		callLogs.setCallDuration(calltime);
 		callLogs.setCallEndDate(endTimeCall);
-		callLogs.setComments(comments);
-		callLogs.setStatus(status);
+		callLogs.setCallBackDateTime(items.get("callBackDateTime"));
+		callLogs.setComments(items.get("comment"));
+		callLogs.setCallDuration(String.valueOf(difference_In_Seconds));
+		callLogs.setLeadId(leads.getId());
+		callLogs.setCallType(items.get("callType"));
+		callLogs.setStatus(leads.getStatus());
 		callLogsRepository.save(callLogs);
+//		listCallLogs.add(callLogs);
+		}else {
+			List<String> listCampName=campaingRepository.findCampaingByUserName(items.get("username"));
+			String campName=listCampName!=null?listCampName.get(0):"";
+			Leads lead= new Leads();
+			lead.setAssignedTo(items.get("username"));
+			lead.setCallBackDateTime(items.get("callBackDateTime"));
+			lead.setFilename("manual"+campName);
+			lead.setPhoneNumber(items.get("phone_number"));
+			lead.setStatus(items.get("status"));
+			LeadVersions leadVersion=leadVersionsRepository.findByFileName("manual"+campName);
+			if(leadVersion==null) {
+				leadVersion=new LeadVersions();
+				leadVersion.setCampaingName(campName);
+				leadVersion.setFilename("manual"+campName);
+				leadVersion.setStatus("Active");
+				leadVersionsRepository.save(leadVersion);
+			}
+			leadRepository.save(lead);
+			CallLogs callLogs = new CallLogs();
+			callLogs.setStatus(items.get("status"));
+			String callStartTime = "";
+			String callEndTime = "";
+			try {
+				callStartTime = LeadsService.formatDate(items.get("callStartedTime"), "dd-MM-yyyy HH:mm:ss",
+						"yyyy-MM-dd HH:mm:ss");
+				callEndTime = LeadsService.formatDate(items.get("callEndTime"), "dd-MM-yyyy HH:mm:ss",
+						"yyyy-MM-dd HH:mm:ss");
+
+			} catch (ParseException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			System.out.println(callStartTime);
+			Date startTimeCall = null;
+			Date endTimeCall = null;
+			try {
+				startTimeCall = dateFormat.parse(callStartTime);
+				endTimeCall = dateFormat.parse(callEndTime);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("###############batch feedback");
+			System.out.println(startTimeCall);
+			long difference_In_Time = endTimeCall.getTime() - startTimeCall.getTime();
+			long difference_In_Seconds = TimeUnit.MILLISECONDS.toSeconds(difference_In_Time);
+			callLogs.setAssignedTo(items.get("username"));
+			callLogs.setCallDate(startTimeCall);
+			callLogs.setCallEndDate(endTimeCall);
+			callLogs.setCallBackDateTime(items.get("callBackDateTime"));
+			callLogs.setComments(items.get("comment"));
+			callLogs.setCallDuration(String.valueOf(difference_In_Seconds));
+			callLogs.setLeadId(lead.getId());
+			callLogs.setCallType(items.get("callType"));
+			callLogs.setStatus(lead.getStatus());
+			callLogsRepository.save(callLogs);
+//			listCallLogs.add(callLogs);
+		}
 	}
 
 	// public void createLeadWithCampaing(Map<String, String> request) {

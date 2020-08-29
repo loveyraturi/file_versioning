@@ -16,7 +16,7 @@ public interface LeadsRepository extends JpaRepository<Leads, Integer> {
 	
 	@Query(value="select * from leads where filename IN (:filename) and (status='ACTIVE')", nativeQuery = true)
 	 List<Leads> findLeadsByFilename(@Param("filename") List<String> filename);
-	@Query(value="select * from leads where filename IN (:filename) and assigned_to=:assignedTo and (status='ACTIVE') ", nativeQuery = true)
+	@Query(value="select * from leads where filename IN (:filename) and assigned_to=:assignedTo and (status='ACTIVE') LIMIT 200", nativeQuery = true)
 	 List<Leads> findLeadsByFilenameAndUserName(@Param("filename") List<String> filename,@Param("assignedTo") String assignedTo);
 	
 	@Query(value="select leads.* from leads INNER JOIN campaing_lead_mapping as table1 ON table1.leadid = leads.id where table1.campaingid=:campaingid and status='ACTIVE' LIMIT 1", nativeQuery = true)

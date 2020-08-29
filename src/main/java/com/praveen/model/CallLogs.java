@@ -21,10 +21,24 @@ public class CallLogs {
 	String status;
 	String callBackDateTime;
 	String comments;
+	String phoneNumber;
+	String callType;
 	Date callDate;
 	Date CallEndDate;
 	
 	
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+	public String getCallType() {
+		return callType;
+	}
+	public void setCallType(String callType) {
+		this.callType = callType;
+	}
 	public String getStatus() {
 		return status;
 	}

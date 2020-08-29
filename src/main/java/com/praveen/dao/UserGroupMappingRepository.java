@@ -12,6 +12,6 @@ import com.praveen.model.UserGroupMapping;
 import com.praveen.model.Users;
 
 public interface UserGroupMappingRepository extends JpaRepository<UserGroupMapping, Integer> {
-	@Query(value="select table1.* from users INNER JOIN user_group_mapping as table1 ON users.full_name = table1.username where users.username=:username ", nativeQuery = true)
+	@Query(value="select table1.* from users INNER JOIN user_group_mapping as table1 ON users.username = table1.username where users.username=:username ", nativeQuery = true)
 	 List<UserGroupMapping> findGroupByUsername(@Param("username") String username);
 }

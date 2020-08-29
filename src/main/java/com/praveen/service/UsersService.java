@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.fabric.xmlrpc.base.Array;
 import com.praveen.dao.AttendanceRepository;
 import com.praveen.dao.BreakTypesRepository;
+import com.praveen.dao.CallLogsRepository;
 import com.praveen.dao.CampaingLeadMappingRepository;
 import com.praveen.dao.CampaingRepository;
 import com.praveen.dao.GroupCampaingMappingRepository;
@@ -22,6 +23,7 @@ import com.praveen.dao.UserGroupMappingRepository;
 import com.praveen.dao.UserGroupRepository;
 import com.praveen.dao.UsersRepository;
 import com.praveen.model.Attendance;
+import com.praveen.model.CallLogs;
 import com.praveen.model.Campaing;
 import com.praveen.model.CampaingLeadMapping;
 import com.praveen.model.GroupCampaingMapping;
@@ -61,6 +63,8 @@ public class UsersService {
 	@Autowired
 	UserGroupRepository userGroupRepository;
 	@Autowired
+	CallLogsRepository callLogsRepository;
+	@Autowired
 	UserGroupMappingRepository userGroupMappingRepository;
 	@Autowired
 	GroupCampaingMappingRepository groupCampaingMappingRepository;
@@ -91,6 +95,29 @@ public class UsersService {
 	// response.put("status", "success");
 	// return response;
 	// }
+	public void getData() {
+		callLogsRepository.findAll().forEach((elem) -> {
+			System.out.println(elem.getLeadId());
+		});
+	}
+
+	public void syncDataToCallLogs() {
+		List<CallLogs> lcl = new ArrayList<>();
+		leadsRepository.findAll().forEach((item) -> {
+			CallLogs cl = new CallLogs();
+			cl.setAssignedTo(item.getAssignedTo());
+			cl.setCallDate(item.getCallDate());
+			cl.setCallEndDate(item.getCallEndDate());
+			cl.setCallDuration(item.getLast_local_call_time());
+			cl.setCallType("Auto");
+			cl.setComments(item.getComments());
+			cl.setLeadId(item.getId());
+			cl.setStatus(item.getStatus());
+			lcl.add(cl);
+		});
+		callLogsRepository.saveAll(lcl);
+		System.out.println("done##############33");
+	}
 
 	public Map<String, String> deleteUser(int id) {
 		Map<String, String> response = new HashMap<>();
@@ -120,9 +147,9 @@ public class UsersService {
 		return response;
 	}
 
-	public void uploadFile(MultipartFile file, String filePath, String username,String leadId,String campaing) {
+	public void uploadFile(MultipartFile file, String filePath, String username, String leadId, String campaing) {
 		try {
-			System.out.println(filePath + file.getOriginalFilename());
+			// System.out.println(filePath + file.getOriginalFilename());
 			byte[] bytes = file.getBytes();
 			BufferedOutputStream stream = new BufferedOutputStream(
 					new FileOutputStream(new File(filePath + file.getOriginalFilename())));
@@ -130,21 +157,21 @@ public class UsersService {
 			stream.close();
 			Recordings recordings = new Recordings();
 			recordings.setRecordingName(file.getOriginalFilename());
-			if(username!=null) {
-			recordings.setUsername(username);
+			if (username != null) {
+				recordings.setUsername(username);
 			}
-			if(leadId!=null) {
-			recordings.setLeadId(Integer.parseInt(leadId));
+			if (leadId != null) {
+				recordings.setLeadId(Integer.parseInt(leadId));
 			}
-			if(campaing!=null) {
-			recordings.setCampaing(campaing);
+			if (campaing != null) {
+				recordings.setCampaing(campaing);
 			}
 			recordingRepository.save(recordings);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void uploadFile(MultipartFile file, String filePath, String username) {
 		try {
 			System.out.println(filePath + file.getOriginalFilename());
@@ -239,17 +266,20 @@ public class UsersService {
 		});
 		return users;
 	}
+
 	public List<Users> fetchOnlineUsersByCampaingName(String campaingName) {
 		return userRepository.fetchOnlineUsersByCampaingName(campaingName);
 	}
+
 	public List<Map<String, Object>> fetchLeadsByUserAndCampaing(Map<String, String> request) {
 		List<Leads> response = new ArrayList<>();
 		userGroupMappingRepository.findGroupByUsername(request.get("username")).forEach((groupMapping) -> {
 			List<Campaing> campaings = campaingRepository.findCampaingByGroupName(groupMapping.getGroupname(),
 					request.get("campaing"));
+
 			// int count=0;
 			campaings.forEach((campaing) -> {
-//				campaing.getAssignmentType()
+				// campaing.getAssignmentType()
 				List<String> filenames = leadsRepository.findLeadsVersionsByCampaingName(campaing.getName());
 				List<Leads> leads = leadsRepository.findLeadsByFilename(filenames);
 				response.addAll(leads);
@@ -267,24 +297,24 @@ public class UsersService {
 				leadsRepository.save(currentLead);
 			}
 		}
-		List<Map<String,Object>> respList=new ArrayList<>();
-		
-		response.forEach((items)->{
+		List<Map<String, Object>> respList = new ArrayList<>();
+
+		response.forEach((items) -> {
 			JsonNode responseCrm = null;
 			ObjectMapper mapper = new ObjectMapper();
-			String fields=items.getCrm();
-			if(!fields.isEmpty()) {
+			String fields = items.getCrm();
+			if (!fields.isEmpty()) {
 				System.out.println("inside");
-			 try {
-				 responseCrm = mapper.readTree(fields);
-			} catch (JsonMappingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JsonProcessingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			}else {
+				try {
+					responseCrm = mapper.readTree(fields);
+				} catch (JsonMappingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else {
 				try {
 					responseCrm = mapper.readTree("{}");
 				} catch (JsonMappingException e) {
@@ -295,22 +325,23 @@ public class UsersService {
 					e.printStackTrace();
 				}
 			}
-			Map<String,Object> resp=new HashMap<>();
-			resp.put("id",items.getId());
-			resp.put("name",items.getName());
-			resp.put("assignedTo",items.getAssignedTo());
-			resp.put("phoneNumber",items.getPhoneNumber());
-			resp.put("firstName",items.getFirstName());
-	        resp.put("city",items.getCity());
-	        resp.put("state",items.getState());
-	        resp.put("email",items.getEmail());
-	        resp.put("crm",responseCrm);
-	        resp.put("status",items.getStatus());
-	        resp.put("callCount",items.getCallCount());
-	        resp.put("filename",items.getFilename());
-	        resp.put("dateCreated",items.getDateCreated());
-	        resp.put("dateModified",items.getDateModified());
-	        respList.add(resp);
+
+			Map<String, Object> resp = new HashMap<>();
+			resp.put("id", items.getId());
+			resp.put("name", items.getName());
+			resp.put("assignedTo", items.getAssignedTo());
+			resp.put("phoneNumber", items.getPhoneNumber());
+			resp.put("firstName", items.getFirstName());
+			resp.put("city", items.getCity());
+			resp.put("state", items.getState());
+			resp.put("email", items.getEmail());
+			resp.put("crm", responseCrm);
+			resp.put("status", items.getStatus());
+			resp.put("callCount", items.getCallCount());
+			resp.put("filename", items.getFilename());
+			resp.put("dateCreated", items.getDateCreated());
+			resp.put("dateModified", items.getDateModified());
+			respList.add(resp);
 		});
 		return respList;
 	}
@@ -346,9 +377,9 @@ public class UsersService {
 	public List<Leads> fetchLeadByUserAndCampaing(Map<String, String> request) {
 		List<Leads> response = new ArrayList<>();
 		userGroupMappingRepository.findGroupByUsername(request.get("username")).forEach((groupMapping) -> {
+			System.out.println(request.get("campaing"));
 			List<Campaing> campaings = campaingRepository.findCampaingByGroupName(groupMapping.getGroupname(),
 					request.get("campaing"));
-			// int count=0;
 			campaings.forEach((campaing) -> {
 				List<String> filenames = leadsRepository.findLeadsVersionsByCampaingName(campaing.getName());
 				System.out.println(filenames);
@@ -360,22 +391,23 @@ public class UsersService {
 					} else {
 						List<Leads> leads = leadsRepository.findLeadsByFilename(filenames);
 						response.addAll(leads);
+						for (int i = 0; i < response.size(); i++) {
+							if (i == 0) {
+								System.out.println(response);
+								Leads currentLead = response.get(i);
+								System.out.println("############################");
+								System.out.println(response.get(i).getId());
+								System.out.println(request.get("username"));
+								currentLead.setStatus("OCCUPIED");
+								currentLead.setName(request.get("username"));
+								leadsRepository.save(currentLead);
+							}
+						}
 					}
 				}
 			});
 		});
-		for (int i = 0; i < response.size(); i++) {
-			if (i == 0) {
-				System.out.println(response);
-				Leads currentLead = response.get(i);
-				System.out.println("############################");
-				System.out.println(response.get(i).getId());
-				System.out.println(request.get("username"));
-				currentLead.setStatus("OCCUPIED");
-				currentLead.setName(request.get("username"));
-				leadsRepository.save(currentLead);
-			}
-		}
+
 		return response;
 	}
 

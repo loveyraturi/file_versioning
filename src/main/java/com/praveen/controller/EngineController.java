@@ -66,6 +66,7 @@ import com.praveen.model.Recordings;
 import com.praveen.model.BreakTypes;
 import com.praveen.model.CallLogs;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.praveen.dao.CallLogsRepository;
 import com.praveen.dao.CampaingLeadMappingRepository;
 import com.praveen.dao.CampaingRepository;
 import com.praveen.dao.GroupCampaingMappingRepository;
@@ -118,10 +119,14 @@ public class EngineController {
 	LeadsRepository leadsRepository;
 	@Autowired
 	UsersRepository usersRepository;
+	@Autowired
+	CallLogsRepository callLogsRepository;
 
 	@Value("${reporting.location}")
 	String reportingLocation;
-
+	@Value("${recording.location}")
+	String recordingLocation;
+	
 	@Autowired
 	private UsersRepository userRepository;
 	@Autowired
@@ -154,6 +159,17 @@ public class EngineController {
 	public List<UserGroup> fetchAllGroups() {
 		return userGroupRepository.findAll();
 	}
+	@CrossOrigin
+	@GetMapping("/syncDataToCallLogs")
+	public void syncDataToCallLogs() {
+		 usersService.syncDataToCallLogs();
+	}
+	
+	@CrossOrigin
+	@GetMapping("/getData")
+	public void getData() {
+		 usersService.getData();
+	}
 
 	@CrossOrigin
 	@GetMapping("/fetchactivecampaing")
@@ -164,7 +180,7 @@ public class EngineController {
 	@CrossOrigin
 	@PostMapping("/uploadFile")
     public Map<String,String> uploadFile(@RequestParam("file") MultipartFile file,@RequestParam("username") String username,@RequestParam("leadId") String leadId,@RequestParam("campaing") String campaing) {
-                usersService.uploadFile(file,reportingLocation,username,leadId,campaing);
+                usersService.uploadFile(file,recordingLocation+"amr/",username,leadId,campaing);
                 Map<String,String> response = new HashMap<String,String>();
                 response.put("status","true");
                 return response;
@@ -357,6 +373,14 @@ public class EngineController {
 		return usersService.fetchRecordingsByUsername(username);
 
 	}
+//	@CrossOrigin
+//	@PostMapping(path = "/fetchRecordingsByUsername", consumes = "application/json", produces = "application/json")
+//	@ResponseBody
+//	public List<Map<String,Object>> fetchRecordingsByUsername(@RequestBody(required = true) Map<String, String> resp) {
+//        
+//		return usersService.fetchRecordingsByUsername(resp);
+//	}
+	
 	@CrossOrigin
 	@GetMapping("/fetchRecordings")
 	public List<Recordings> fetchRecordings() {
@@ -375,6 +399,36 @@ public class EngineController {
 	@GetMapping("/fetchcampaings")
 	public List<Campaing> fetchCampaings() {
 		return campaingRepository.findAll();
+	}
+
+	@CrossOrigin
+	@GetMapping("/fetchcallbacks/{username}")
+	public Map<String,List<Map<String,Object>>> fetchCallbacks(@PathVariable("username") String username) {
+		Map<String,List<Map<String,Object>>> callbacks=new HashMap<>();
+		List<Map<String,Object>> callbacksList = new ArrayList<>();
+		callLogsRepository.findAllCallbacks(username).forEach((items)->{
+			System.out.println(items);
+			Map<String,Object> callbacksObject = new HashMap<>();
+			callbacksObject.put("id", items[10]);
+			callbacksObject.put("name", items[0]);
+			callbacksObject.put("assignedTo", items[0]);
+			callbacksObject.put("phoneNumber", items[1]);
+			callbacksObject.put("firstName", items[3]);
+			callbacksObject.put("city", "");
+			callbacksObject.put("state", "");
+			callbacksObject.put("email", "");
+			callbacksObject.put("crm", items[9]);
+			callbacksObject.put("status", items[2]);
+			callbacksObject.put("callBackDateTime", items[8]);
+			callbacksObject.put("last_local_call_time", items[5]);
+			callbacksObject.put("comments", items[4]);
+			callbacksObject.put("callDate", items[6]);
+			callbacksObject.put("callEndDate", items[7]);
+			callbacksList.add(callbacksObject);
+		});
+		
+		callbacks.put("callback", callbacksList);
+		return callbacks;
 	}
 
 	@PostMapping(path = "/statusCall", consumes = "application/json", produces = "application/json")
@@ -720,8 +774,7 @@ public class EngineController {
 	public Map<String, Boolean> feedbackLeads(@RequestBody(required = true) Map<String, String> request) {
 		System.out.println("#######FEEDBACKLEADSs");	
 		System.out.println(request);
-		leadsService.feedbackLead(Integer.parseInt(request.get("leadId")), request.get("status"),
-				request.get("callTime"), request.get("comment"),request.get("callBackDateTime"),request.get("callStartedTime"),request.get("callEndTime"),request.get("username"));
+		leadsService.feedbackLead(request);
 
 		Map<String, Boolean> response = new HashMap<>();
 		response.put("status", true);
@@ -834,6 +887,7 @@ public class EngineController {
 	@ResponseBody
 	public List<Leads> fetchLeadByUserAndCampaing(@PathVariable("username") String username,
 			@PathVariable("campaing") String campaing) {
+		System.out.println("#####################3");
 		Map<String, String> request = new HashMap<>();
 		request.put("username", username);
 		request.put("campaing", campaing);

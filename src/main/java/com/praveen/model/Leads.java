@@ -35,6 +35,11 @@ public class Leads {
 	String filename;
 	Date dateCreated;
 	Date DateModified;
+	String callBackDateTime;
+	String 	last_local_call_time;
+	String comments;
+	Date callDate;
+	Date CallEndDate;
 
 //	@ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn (name="id",referencedColumnName = "id", insertable = false, updatable = false)
@@ -49,6 +54,56 @@ public class Leads {
 //	}
 
 	
+	public String getCallBackDateTime() {
+		return callBackDateTime;
+	}
+
+
+	public void setCallBackDateTime(String callBackDateTime) {
+		this.callBackDateTime = callBackDateTime;
+	}
+
+
+	public String getLast_local_call_time() {
+		return last_local_call_time;
+	}
+
+
+	public void setLast_local_call_time(String last_local_call_time) {
+		this.last_local_call_time = last_local_call_time;
+	}
+
+
+	public String getComments() {
+		return comments;
+	}
+
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
+
+	public Date getCallDate() {
+		return callDate;
+	}
+
+
+	public void setCallDate(Date callDate) {
+		this.callDate = callDate;
+	}
+
+
+	public Date getCallEndDate() {
+		return CallEndDate;
+	}
+
+
+	public void setCallEndDate(Date callEndDate) {
+		CallEndDate = callEndDate;
+	}
+
+
 	public int getId() {
 		return id;
 	}
