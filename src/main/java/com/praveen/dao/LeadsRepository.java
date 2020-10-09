@@ -11,10 +11,20 @@ import com.praveen.model.Campaing;
 import com.praveen.model.Leads;
 
 public interface LeadsRepository extends JpaRepository<Leads, Integer> {
+
+	@Query(value="select count(*),table1.campaing_name from leads INNER JOIN lead_versions as table1 ON table1.filename = leads.filename where table1.status='Y' GROUP BY table1.campaing_name", nativeQuery = true)
+	 List<Object[]> fetchTotalLeadsCount();
+	
+	 @Query(value="select count(*),table1.campaing_name from leads INNER JOIN lead_versions as table1 ON table1.filename = leads.filename where table1.status='Y' and leads.status='ACTIVE' GROUP BY table1.campaing_name", nativeQuery = true)
+	 List<Object[]> fetchActiveLeads();
+	
+	@Query(value="select count(*),leads.assigned_to from leads INNER JOIN lead_versions as table1 ON table1.filename = leads.filename where table1.status='Y' and leads.status='ACTIVE' and table1.campaing_name=:campaingName group by leads.assigned_to", nativeQuery = true)
+	 List<Object[]> fetchLeadsCountAssignedToUser(@Param("campaingName") String campaingName);
+	
 	@Query(value="select lead_versions.filename from lead_versions INNER JOIN campaing_lead_mapping as table1 ON table1.lead_version_name = lead_versions.filename where table1.campaing_name=:campaingName and lead_versions.status='Y'", nativeQuery = true)
 	 List<String> findLeadsVersionsByCampaingName(@Param("campaingName") String campaingName);
 	
-	@Query(value="select * from leads where filename IN (:filename) and (status='ACTIVE')", nativeQuery = true)
+	@Query(value="select * from leads where filename IN (:filename) and (status='ACTIVE') LIMIT 1", nativeQuery = true)
 	 List<Leads> findLeadsByFilename(@Param("filename") List<String> filename);
 	@Query(value="select * from leads where filename IN (:filename) and assigned_to=:assignedTo and (status='ACTIVE') LIMIT 200", nativeQuery = true)
 	 List<Leads> findLeadsByFilenameAndUserName(@Param("filename") List<String> filename,@Param("assignedTo") String assignedTo);

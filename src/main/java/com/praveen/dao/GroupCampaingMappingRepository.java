@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,4 +24,9 @@ public interface GroupCampaingMappingRepository extends JpaRepository<GroupCampa
 
 	@Query(value = "select * from group_campaing_mapping  where campaingname=:campaingname ", nativeQuery = true)
 	GroupCampaingMapping findGroupByCampaingName(@Param("campaingname") String campaingname);
+	
+	@Modifying
+	@Query(value = "delete from group_campaing_mapping  where groupname=:groupName ", nativeQuery = true)
+	void deleteByGroupName(@Param("groupName") String groupName);
+
 }

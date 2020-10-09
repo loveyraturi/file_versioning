@@ -22,11 +22,26 @@ public class CallLogs {
 	String callBackDateTime;
 	String comments;
 	String phoneNumber;
+	String crm;
+	String recording;
 	String callType;
 	Date callDate;
 	Date CallEndDate;
 	
 	
+	
+	public String getCrm() {
+		return crm;
+	}
+	public void setCrm(String crm) {
+		this.crm = crm;
+	}
+	public String getRecording() {
+		return recording;
+	}
+	public void setRecording(String recording) {
+		this.recording = recording;
+	}
 	public String getPhoneNumber() {
 		return phoneNumber;
 	}

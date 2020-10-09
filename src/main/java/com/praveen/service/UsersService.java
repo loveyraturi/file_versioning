@@ -133,10 +133,13 @@ public class UsersService {
 		return response;
 	}
 
-	public Map<String, String> deleteGroup(int id) {
+	public Map<String, String> deleteGroup(String name) {
 		Map<String, String> response = new HashMap<>();
 		response.put("status", "true");
-		userGroupRepository.deleteById(id);
+		synchronized(this.getClass()) {
+			userGroupRepository.deleteById(userGroupRepository.findGroupByName(name).getId());
+			groupCampaingMappingRepository.deleteInBatch(groupCampaingMappingRepository.findByGroupName(name));
+		}
 		return response;
 	}
 
@@ -374,7 +377,7 @@ public class UsersService {
 	// }
 	//
 	// }
-	public List<Leads> fetchLeadByUserAndCampaing(Map<String, String> request) {
+	public synchronized List<Leads>  fetchLeadByUserAndCampaing(Map<String, String> request) {
 		List<Leads> response = new ArrayList<>();
 		userGroupMappingRepository.findGroupByUsername(request.get("username")).forEach((groupMapping) -> {
 			System.out.println(request.get("campaing"));
@@ -390,13 +393,20 @@ public class UsersService {
 						response.addAll(leads);
 					} else {
 						List<Leads> leads = leadsRepository.findLeadsByFilename(filenames);
-						response.addAll(leads);
-						for (int i = 0; i < response.size(); i++) {
+						System.out.println(leads.get(0).getPhoneNumber()+"#######@@@@@@@@@@@@@##########");
+						for (int i = 0; i < leads.size(); i++) {
 							if (i == 0) {
-								System.out.println(response);
-								Leads currentLead = response.get(i);
-								System.out.println("############################");
-								System.out.println(response.get(i).getId());
+								System.out.println(leads);
+								Leads currentLead = leads.get(i);
+								Leads leadCloned=null;
+								try {
+									leadCloned = currentLead.clone();
+								} catch (CloneNotSupportedException e) {
+									e.printStackTrace();
+								}
+								response.add(leadCloned);
+								System.out.println(leadCloned.getPhoneNumber()+"############################");
+								System.out.println(leads.get(i).getId());
 								System.out.println(request.get("username"));
 								currentLead.setStatus("OCCUPIED");
 								currentLead.setName(request.get("username"));
