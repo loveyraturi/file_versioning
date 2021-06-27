@@ -1,5 +1,12 @@
 package com.praveen.service;
 
+import org.quartz.CronScheduleBuilder;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
@@ -9,12 +16,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mysql.fabric.xmlrpc.base.Array;
 import com.praveen.dao.AttendanceRepository;
 import com.praveen.dao.BreakTypesRepository;
 import com.praveen.dao.CallLogsRepository;
 import com.praveen.dao.CampaingLeadMappingRepository;
 import com.praveen.dao.CampaingRepository;
+import com.praveen.dao.CornsJobRepository;
 import com.praveen.dao.GroupCampaingMappingRepository;
 import com.praveen.dao.LeadVersionsRepository;
 import com.praveen.dao.LeadsRepository;
@@ -26,6 +33,7 @@ import com.praveen.model.Attendance;
 import com.praveen.model.CallLogs;
 import com.praveen.model.Campaing;
 import com.praveen.model.CampaingLeadMapping;
+import com.praveen.model.Corns;
 import com.praveen.model.GroupCampaingMapping;
 import com.praveen.model.LeadVersions;
 import com.praveen.model.Leads;
@@ -82,19 +90,46 @@ public class UsersService {
 	BreakTypesRepository breakTypesRepository;
 	@Autowired
 	AttendanceRepository attendanceRepository;
+	@Autowired
+	CornsJobRepository cornsJobRepository;
+	@Autowired
+	EmailServiceImpl emailServiceImpl;
 
-	// public Map<String, String> saveVersion(Map<String, String> request) {
-	// Versions version = new Versions();
-	// version.setFilename(request.get("filename"));
-	// version.setVersion(request.get("version"));
-	// version.setEnabled("1");
-	// System.out.println(version.getFilename() + "###################");
-	// Versions resp = repository.save(version);
-	// Map<String, String> response = new HashMap<String, String>();
-	// response.put("id", String.valueOf(resp.getId()));
-	// response.put("status", "success");
-	// return response;
-	// }
+	public Map<String,String> scheduleCornJob(Map<String,String> request){
+		try {
+			emailServiceImpl.createRequest(request);
+		JobDetail job = JobBuilder.newJob(CronJobs.class)
+                .withIdentity("job", "group").build();
+		Trigger trigger = null;
+		System.out.println(request.get("scheduleType"));
+		if (request.get("scheduleType").equals("firstHalf")) {
+			trigger= TriggerBuilder.newTrigger().withIdentity("cronTrigger", "group")
+                .withSchedule(CronScheduleBuilder.cronSchedule("0/5 * * * * ?"))
+                .build();
+		}else {
+			 
+			trigger =TriggerBuilder.newTrigger().withIdentity("cronTrigger", "group")
+		                .withSchedule(CronScheduleBuilder.cronSchedule("0/5 * * * * ?"))
+		                .build();
+		}
+//        Corns cj= new Corns();
+//        cj.setCampaingName(request.get("campaing"));
+//        cj.setCronName(request.get("campaing")+"-"+request.get("scheduleType")+"-"+request.get("status"));
+//        cj.setScheduleTime(request.get("scheduleType"));
+//        cj.setStatus(request.get("status"));
+//        cj.setTo(request.get("to"));
+//        cornsJobRepository.save(cj);
+        Scheduler scheduler1 = new StdSchedulerFactory().getScheduler();
+        scheduler1.start();
+        scheduler1.scheduleJob(job, trigger);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+
+        
+		return null;
+		
+	}
 	public void getData() {
 		callLogsRepository.findAll().forEach((elem) -> {
 			System.out.println(elem.getLeadId());
@@ -133,10 +168,13 @@ public class UsersService {
 		return response;
 	}
 
-	public Map<String, String> deleteGroup(int id) {
+	public Map<String, String> deleteGroup(String name) {
 		Map<String, String> response = new HashMap<>();
 		response.put("status", "true");
-		userGroupRepository.deleteById(id);
+		synchronized(this.getClass()) {
+			userGroupRepository.deleteById(userGroupRepository.findGroupByName(name).getId());
+			groupCampaingMappingRepository.deleteInBatch(groupCampaingMappingRepository.findByGroupName(name));
+		}
 		return response;
 	}
 
@@ -236,7 +274,6 @@ public class UsersService {
 
 		return response;
 	}
-
 	public Users login(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
 
@@ -374,7 +411,7 @@ public class UsersService {
 	// }
 	//
 	// }
-	public List<Leads> fetchLeadByUserAndCampaing(Map<String, String> request) {
+	public synchronized List<Leads>  fetchLeadByUserAndCampaing(Map<String, String> request) {
 		List<Leads> response = new ArrayList<>();
 		userGroupMappingRepository.findGroupByUsername(request.get("username")).forEach((groupMapping) -> {
 			System.out.println(request.get("campaing"));
@@ -390,13 +427,20 @@ public class UsersService {
 						response.addAll(leads);
 					} else {
 						List<Leads> leads = leadsRepository.findLeadsByFilename(filenames);
-						response.addAll(leads);
-						for (int i = 0; i < response.size(); i++) {
+						System.out.println(leads.get(0).getPhoneNumber()+"#######@@@@@@@@@@@@@##########");
+						for (int i = 0; i < leads.size(); i++) {
 							if (i == 0) {
-								System.out.println(response);
-								Leads currentLead = response.get(i);
-								System.out.println("############################");
-								System.out.println(response.get(i).getId());
+								System.out.println(leads);
+								Leads currentLead = leads.get(i);
+								Leads leadCloned=null;
+								try {
+									leadCloned = currentLead.clone();
+								} catch (CloneNotSupportedException e) {
+									e.printStackTrace();
+								}
+								response.add(leadCloned);
+								System.out.println(leadCloned.getPhoneNumber()+"############################");
+								System.out.println(leads.get(i).getId());
 								System.out.println(request.get("username"));
 								currentLead.setStatus("OCCUPIED");
 								currentLead.setName(request.get("username"));
@@ -441,6 +485,25 @@ public class UsersService {
 			attendance.setSeconds(seconds);
 			attendance.setTotalWorkHour(workTime);
 			System.out.println(workTime);
+			UserGroup userGroup=userGroupRepository.findGroupByName(user.getUsergroup());
+				if(userGroup!=null) {
+					int totalAmount=userGroup.getAmount();
+					int amountToDeduct= totalAmount - (hours*(userGroup.getAmountPerHours()!=0?userGroup.getAmountPerHours():14));
+					if(amountToDeduct>0) {
+						userGroup.setAmount(amountToDeduct);
+						userGroupRepository.save(userGroup);
+					} else {
+						List<Users> usersLists= new ArrayList<Users>();
+						userRepository.findUserByGroupName(user.getUsergroup()).forEach(userr->{
+							userr.setStatus("Inactive");
+							usersLists.add(userr);
+							
+						});
+						userRepository.saveAll(usersLists);
+					}
+				}
+			
+			
 
 			attendanceRepository.save(attendance);
 			//

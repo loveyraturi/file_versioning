@@ -43,7 +43,20 @@ public class UserGroupService {
 		userGroupRepository.save(userGroup);
 	}
 	
-		
+	public void addBalance(Map<String, String> request){
+		UserGroup userGroup=userGroupRepository.findGroupByName(request.get("groupName"));
+		if(userGroup!=null) {
+		userGroup.setAmount(userGroup.getAmount()+Integer.parseInt(request.get("rechargeAmount")));
+		userGroupRepository.save(userGroup);
+		}
+	}
+	public void setHourlyPrice(Map<String, String> request){
+		UserGroup userGroup=userGroupRepository.findGroupByName(request.get("groupName"));
+		if(userGroup!=null) {
+		userGroup.setAmountPerHours(Integer.parseInt(request.get("totalAmountPerHours")));
+		userGroupRepository.save(userGroup);
+		}
+	}
 	public List<Map<String,Object>> fetchGroupsWithCampaings() {
 		List<Map<String,Object>> responseList= new ArrayList<Map<String,Object>>();
 		 userGroupRepository.findAll().forEach((items)->{

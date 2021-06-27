@@ -19,13 +19,14 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "userGroup")
 public class UserGroup {
-
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	int id;
 	String name;
 	String active;
+	int amount;
+	int amountPerHours;
 	Date dateCreated;
 	Date DateModified;
 //	@OneToMany(mappedBy = "userGroup", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -49,9 +50,31 @@ public class UserGroup {
 //		this.campaing = campaing;
 //	}
 
+	
 	public int getId() {
 		return id;
 	}
+
+
+	public int getAmount() {
+		return amount;
+	}
+
+
+	public void setAmount(int amount) {
+		this.amount = amount;
+	}
+
+
+	public int getAmountPerHours() {
+		return amountPerHours;
+	}
+
+
+	public void setAmountPerHours(int amountPerHours) {
+		this.amountPerHours = amountPerHours;
+	}
+
 
 	public void setId(int id) {
 		this.id = id;

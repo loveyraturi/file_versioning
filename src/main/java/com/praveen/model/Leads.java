@@ -18,7 +18,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "leads")
-public class Leads {
+public class Leads implements Cloneable{
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	int id;
@@ -53,7 +53,28 @@ public class Leads {
 //		this.campaing = campaing;
 //	}
 
-	
+	 public Leads clone() throws CloneNotSupportedException {
+	        return (Leads) super.clone();
+	    }
+
+//		this.assignedTo;
+//		this.phoneNumber;
+//		this.firstName;
+//		this.city;
+//		this.state;
+//		this.email;
+//		this.crm;
+//		this.status;
+//		this.callCount;
+//		this.filename;
+//		this.dateCreated;
+//		this.DateModified;
+//		String callBackDateTime;
+//		String 	last_local_call_time;
+//		String comments;
+//		Date callDate;
+//		Date CallEndDate;
+//	}
 	public String getCallBackDateTime() {
 		return callBackDateTime;
 	}

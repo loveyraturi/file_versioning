@@ -49,7 +49,6 @@ public class CampaingService {
 		return campaingRepository.findAllById(ids);
 	}
 	
-	
 	public Map<String,String> fetchStatuByCampaingName(String CampaingName) {
 		Map<String,String> response = new HashMap<>();
 		Status status= statusRepository.findStatusCampaingName(CampaingName);
